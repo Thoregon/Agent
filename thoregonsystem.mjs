@@ -21,6 +21,8 @@ import MetaClass             from "/thoregon.archetim/lib/metaclass/metaclass.mj
 // crypto, safety & security
 //
 
+console.log("** thoregon.system START");
+
 universe.$everblack = SEA;
 universe.$lifecycle = new NodeLifecycleEmitter();
 
@@ -62,8 +64,11 @@ setTimeout(async () => {
     // check SSI for agent
     //
 
+    console.log("** thoregon.system INIT");
+
     const SSI = universe.ssi;
     if (SSI) {
+        console.log("** thoregon.system SSI:", SSI.alias);
         const confdir = universe.env.etcdir ?? './etc';
         const spec = (await import(`${confdir}/agent_0.config.mjs`)).default;
         await universe.Identity.agentIdentity(SSI);
@@ -74,6 +79,8 @@ setTimeout(async () => {
     // awake agent when SSI is avialable
     //
     await agent.prepare();
+
+    console.log("** thoregon.system DONE");
 }, 300);
 
 //
@@ -84,3 +91,5 @@ universe.atDusk(async (universe, code) => {
     universe.neuland?.stop();
     // universe.neulandlocal?.stop();
 })
+
+console.log("** thoregon.system END");
