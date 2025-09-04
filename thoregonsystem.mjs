@@ -36,60 +36,71 @@ const identity     = new IdentityReflection();
 const dorifer      = new Dorifer();
 const wsc          = new WebserviceController();
 
-neuland.init(NeulandStorageAdapter, universe.NEULAND_STORAGE_OPT);
-await neuland.start();
-//neulandlocal.init(NeulandStorageAdapter, universe.NEULANDLOCAL_STORAGE_OPT);
-// await neulandlocal.start();
-
-await identity.start();
-await dorifer.start();
-await wsc.start();
-
-
 //
 // testing & logging
 //
 await LogSink.init();
 universe.$logsink = LogSink;
 
-universe.neulandFrom = async (location, name) => {
-    const neuland = new NeulandDB();
-    neuland.init(NeulandStorageAdapter, { ...universe.NEULAND_STORAGE_OPT, location, name });
-    await neuland.start();
-    return neuland;
+neuland.init(NeulandStorageAdapter, universe.NEULAND_STORAGE_OPT);
+const neulandDB = await neuland.start();
+//neulandlocal.init(NeulandStorageAdapter, universe.NEULANDLOCAL_STORAGE_OPT);
+// await neulandlocal.start();
+
+if (!neulandDB) {
+    console.error("********** neulandDB could not be established **********");
+} else {
+    await startup();
 }
 
-setTimeout(async () => {
-    //
-    // check SSI for agent
-    //
+async function startup() {
+    await identity.start();
+    await dorifer.start();
+    await wsc.start();
 
-    console.log("** thoregon.system INIT");
-
-    const SSI = universe.ssi;
-    if (SSI) {
-        console.log("** thoregon.system SSI:", SSI.alias);
-        const confdir = universe.env.etcdir ?? './etc';
-        const spec = (await import(`${confdir}/agent_0.config.mjs`)).default;
-        await universe.Identity.agentIdentity(SSI);
-        await universe.Agent.addServiceSpec(spec);
+    universe.neulandFrom = async (location, name) => {
+        const neuland = new NeulandDB();
+        neuland.init(NeulandStorageAdapter, { ...universe.NEULAND_STORAGE_OPT, location, name });
+        await neuland.start();
+        return neuland;
     }
 
-    //
-    // awake agent when SSI is avialable
-    //
-    await agent.prepare();
+    setTimeout(async () => {
+        //
+        // check SSI for agent
+        //
 
-    console.log("** thoregon.system DONE");
-}, 300);
+        if (!neulandDB) {
+            return;
+        }
+
+        console.log("** thoregon.system INIT");
+
+        const SSI = universe.ssi;
+        if (SSI) {
+            console.log("** thoregon.system SSI:", SSI.alias);
+            const confdir = universe.env.etcdir ?? './etc';
+            const spec = (await import(`${confdir}/agent_0.config.mjs`)).default;
+            await universe.Identity.agentIdentity(SSI);
+            await universe.Agent.addServiceSpec(spec);
+        }
+
+        //
+        // awake agent when SSI is avialable
+        //
+        await agent.prepare();
+        console.log("** thoregon.system DONE");
+    }, 300);
 
 //
 // shutdown
 //
 
-universe.atDusk(async (universe, code) => {
-    universe.neuland?.stop();
-    // universe.neulandlocal?.stop();
-})
+    universe.atDusk(async (universe, code) => {
+        universe.neuland?.stop();
+        // universe.neulandlocal?.stop();
+    })
+
+}
 
 console.log("** thoregon.system END");
