@@ -54,6 +54,7 @@ if (!neulandDB) {
 }
 
 async function startup() {
+    console.log("*** STARTUP()")
     await identity.start();
     await dorifer.start();
     await wsc.start();
