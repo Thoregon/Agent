@@ -4,7 +4,7 @@
  * @author: blukassen
  */
 
-import letThereBeLight      from '/evolux.universe';
+import letThereBeLight  from '/evolux.universe/lib/sovereign/letThereBeLight.mjs';
 
 (async () => {
     console.log("** letThereBeLight");
