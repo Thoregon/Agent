@@ -109,8 +109,11 @@ async function startup() {
             console.log("** thoregon.system SSI:", SSI.alias);
             const confdir = universe.env.etcdir ?? './etc';
             const spec = (await import(`${confdir}/agent_0.config.mjs`)).default;
+            console.log("** thoregon.system loaded agent 0 config:", SSI.alias);
             await universe.Identity.agentIdentity(SSI);
+            console.log("** thoregon.system applied agent SSI:", SSI.alias);
             await universe.Agent.addServiceSpec(spec);
+            console.log("** thoregon.system applied agent config:", SSI.alias);
         }
 
         //
