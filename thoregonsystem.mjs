@@ -11,8 +11,9 @@ import path                  from "/path";
 import SEA                   from '/evolux.everblack/lib/crypto/sea.mjs'
 import NodeLifecycleEmitter  from "/thoregon.neuland/modules/nodepeer/nodelifecycleemitter.mjs";
 
-import NeulandStorageAdapterBLOB   from "/thoregon.neuland/modules/nodepeer/fsneulandstorageadapter.mjs";
-import NeulandStorageAdapterSQLite from "/thoregon.neuland/modules/nodepeer/fssqlitesyncneulandstorageadapter.mjs";
+// import NeulandStorageAdapterBLOB   from "/thoregon.neuland/modules/nodepeer/fsneulandstorageadapter.mjs";
+// import NeulandStorageAdapterSQLite from "/thoregon.neuland/modules/nodepeer/fssqliteasyncneulandstorageadapter.mjs";
+// import NeulandStorageAdapterSQLite from "/thoregon.neuland/modules/nodepeer/fssqlitesyncneulandstorageadapter.mjs";
 // import NeulandStorageAdapterFSFile from "/thoregon.neuland/modules/nodepeer/fsfileneulandstorageadapter.mjs";
 
 import NeulandDB             from "/thoregon.neuland/src/storage/neulanddb.mjs";
@@ -22,11 +23,23 @@ import WebserviceController  from '/evolux.web//lib/webservicecontroller.mjs';
 import LogSink               from "/evolux.universe/lib/sovereign/logsink.mjs";
 import SelfSovereignIdentity from "/thoregon.identity/lib/selfsovereignidentity.mjs"
 import MetaClass             from "/thoregon.archetim/lib/metaclass/metaclass.mjs";
+import process               from "process";
+import sfs                   from "fs";
 
-const { neulandSQLite, olapSQLite } = NeulandStorageAdapterSQLite.existsSQLite(universe.NEULAND_STORAGE_OPT);
-const NeulandStorageAdapter = neulandSQLite
-              ? NeulandStorageAdapterSQLite
-              : NeulandStorageAdapterBLOB;
+function existsSQLite({ location, name } = {}) {
+    const directory    = path.resolve(process.cwd(), location);
+    const neulandsqlitefile = `${directory}/${name ?? 'neuland'}.sqlite`;
+    const olapsqlitefile = `${directory}/olap/upayme.sqlite`;
+    const neulandSQLite = fs.existsSync(neulandsqlitefile);
+    const olapSQLite = fs.existsSync(olapsqlitefile);
+
+    return { neulandSQLite, olapSQLite };
+}
+
+const { neulandSQLite, olapSQLite } = existsSQLite(universe.NEULAND_STORAGE_OPT);
+const NeulandStorageAdapter = !neulandSQLite || universe.USE_DUCK_DB
+                ? (await import('/thoregon.neuland/modules/nodepeer/fsneulandstorageadapter.mjs')).default// NeulandStorageAdapterBLOB
+                : (await import('/thoregon.neuland/modules/nodepeer/fssqliteasyncneulandstorageadapter.mjs')).default// NeulandStorageAdapterSQLite;
 
 //
 // crypto, safety & security
