@@ -37,9 +37,14 @@ function existsSQLite({ location, name } = {}) {
 }
 
 const { neulandSQLite, olapSQLite } = existsSQLite(universe.NEULAND_STORAGE_OPT);
-const NeulandStorageAdapter = !neulandSQLite || universe.USE_DUCK_DB
+const NeulandStorageAdapter = !neulandSQLite
                 ? (await import('/thoregon.neuland/modules/nodepeer/fsneulandstorageadapter.mjs')).default// NeulandStorageAdapterBLOB
                 : (await import('/thoregon.neuland/modules/nodepeer/fssqliteasyncneulandstorageadapter.mjs')).default// NeulandStorageAdapterSQLite;
+
+console.log("---");
+console.log(">> Neuland DB: SQLite:", neulandSQLite, NeulandStorageAdapter.name);
+console.log(">> OLAP DB: SQLite:", olapSQLite);
+console.log("---");
 
 //
 // crypto, safety & security
@@ -55,6 +60,12 @@ universe.$lifecycle = new NodeLifecycleEmitter();
 //
 
 const neuland      = new NeulandDB();
+
+if (!neulandSQLite) {
+    const NeulandSQLiteAdapter = (await import('/thoregon.neuland/modules/nodepeer/fssqliteasyncneulandstorageadapter.mjs')).default;
+    neuland.requestMigration(NeulandSQLiteAdapter);
+}
+
 // const neulandlocal = new NeulandDB();
 const identity     = new IdentityReflection();
 const dorifer      = new Dorifer();
